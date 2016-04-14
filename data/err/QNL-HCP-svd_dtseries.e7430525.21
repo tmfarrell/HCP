@@ -1,0 +1,5 @@
+/var/spool/sge/scc-ec1/job_scripts/7430525: line 23: [: ==: unary operator expected
+
+real	0m9.656s
+user	0m2.119s
+sys	0m0.392s
