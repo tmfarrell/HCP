@@ -11,15 +11,14 @@
 # prelims
 set -e
 if [ $1 == '-h' ]; then 
-    echo -e "\nUsage:\t\t$ ./svd_dtseries_parallel.sh num_subjects num_partitions [--save-plots] [--allow-recomputing]"
+    echo -e "\nUsage:\n\t$ svd_dtseries_parallel.sh <#subjects> <#partitions> [--save-plots] [--allow-recomputing]"
     echo -e "\nParams:" 
-    echo -e "num_subjects\t\tNumber of subjects to run." 
-    echo -e "num_partitions\t\tNumber of partitions to run them over." 
-    echo -e "--save-plots\tSaves all the preprocessing plots for all the runs." 
-    echo -e "\t\t\tFalse by default." 
-    echo -e "--allow-recomputing\tComputes all svds, even if subject-run svds already in $HCP/data/svds." 
-    echo -e "\t\t\tFalse by default. Note: since by default svds already in $HCP/data/svds are not recomputed," 
-    echo -e "\t\t\tthis will influence how many subjects are actually computed."
+    echo -e "#subjects\t\tNumber of subjects to run." 
+    echo -e "#partitions\t\tNumber of partitions to run them over." 
+    echo -e "--save-plots\t\tSaves all the preprocessing plots for all the runs. False by default." 
+    echo -e "--allow-recomputing\tComputes all svds, even if subject-run svds already in $HCP/data/svds. False by default." 
+    echo -e "\t\t\tNote: since by default svds already in $HCP/data/svds are not recomputed," 
+    echo -e "\t\t\tthis will influence which subjects are and aren't computed (if you're computing less than all)."
     exit
 fi 
 

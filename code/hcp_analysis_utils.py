@@ -47,6 +47,12 @@ def sum_c(arr):
 def mean_c(arr): 
    return(float(sum_c(arr))/float(len(arr)))
 
+@numba.jit("f8(f8[:],f8)") 
+def shift_c(arr, v): 
+   for i in xrange(len(arr)): 
+      arr[i] = arr[i] + v
+   return(arr)
+
 @numba.jit("f8[:,:](f8[:,:])") 
 def doubly_center_c(mat): 
    #[(xij - mean_c(mat[i,:]) - mean_c(mat[:,j]) + mean_c(mat))
@@ -89,7 +95,7 @@ def plot_ts_mat(ts_mat, step, pdf):
    else:                       plt.plot(ts_mat) 
    plt.title(step) 
    pdf.savefig(fig) 
-   plt.close(fig) 
+   plt.close(fig)  
 
 def plot_before_after(before, after, rand_idx, step, pdf): 
    # plots two dense timeseries matrices before and after some processing step
@@ -197,7 +203,7 @@ def get_noise_mask(seg_img, noise_regions, size_limit=None, save_as=None):
 # 
 def get_noise_regressors(subject, run, first_n=5, plots=None, save_noise_mask=False,\
                          save_resampled_seg=False, save_noise_dts=False, size_limit=None,\
-                         noise_regions=['White-Matter','Ventricle']): 
+                         noise_regions=['White-Matter','Ventricle'], center_noise=False): 
    # resample segmentation file to timeseries space 
    seg_f = subject_datadir(subject) + 'aparc+aseg.nii.gz'
    ts_f = fnf_ts(subject, run, dense=False)
@@ -221,17 +227,20 @@ def get_noise_regressors(subject, run, first_n=5, plots=None, save_noise_mask=Fa
    for x, y, z in noise_mask: 
       noise_dts[ix, :] = np.copy(ts_img[x, y, z, :])
       ix = ix + 1
-   # center dts
-   noise_dts_ = doubly_center_c(np.copy(noise_dts))
-   if plots:
-      plots = plots + [(noise_dts, noise_dts_, 'noise centering ' + subject + '-' + run)] 
-   # compute SVD 
-   _, _, noise_V = svd(noise_dts_)   
-   # return first_n PCs 
+   # center along brain ordinate axis 
+   noise_dts_centered = np.zeros(noise_dts.shape)  
+   for ix in xrange(noise_dts.shape[0]): 
+      noise_dts_centered[ix, :] = shift_c(np.copy(noise_dts[ix, :]), (-1)*mean_c(noise_dts[ix, :]))
    if plots: 
-      return (noise_V[:, 0:first_n], plots)
+      plots = plots + [(noise_dts, noise_dts_centered, 'noise brain-ordinate centering ' + subject + '-' + run)] 
+   # compute svd 
+   _, _, noise_V = svd(noise_dts_centered)  
+   # return first_n PCs
+   # of note, scipy.svd gives V.T as V; so return first_n rows
+   if plots: 
+      return (noise_V[0:first_n, :], plots)
    else: 
-      return noise_V[:, 0:first_n]
+      return noise_V[0:first_n, :] 
 
 # 
 # For a given HCP subject and resting-state run: 

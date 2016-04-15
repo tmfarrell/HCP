@@ -60,7 +60,7 @@ for subject_run in subject_runs:
                                            noise_size_limit=args.noise_size_limit[0])
         except: 
             print("There was an error obtaining the timeseries for " + " ".join([subject, run])\
-                  + ".\nThis run probably does not exist for this subject.")
+                  + ".\nThis run probably does not exist for this subject.\n")
             continue
         print("Centering...") 
         M = doubly_center_c(ppts)
@@ -75,4 +75,4 @@ for subject_run in subject_runs:
         print("Done " + subject + '-' + run + ".")
     else: 
         print("The svd for " + str(subject_run) + " is in $HCP/data/svds.\nPass --allow-recomputing " +\
-              " to recompute.")
+              " to recompute.\n")
