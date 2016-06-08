@@ -18,7 +18,7 @@ A preprocessing pipeline for fMRI data from the Human Connectome Project (WU-Min
 	      # calls svd_dtseries.py with supplied args
 
 	      svd_dtseries.py 
-	      # computes svd of partition $SGE_TASK_ID in $HCP/data/id_partitions
+	      # computes svd of a partition in $HCP/data/id_partitions.txt
 
 	      svd_dtseries_parallel.sh 
 	      # parallelizes svd_dtseries.sh across several partitions
