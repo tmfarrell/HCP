@@ -5,9 +5,7 @@ For each subject-run in the specified partition:
     - gets preprocessed dense timeseries 
     - centers it
     - computes svd 
-    - saves to result to .mat
-
-Run `python svd_dtseries.py -h` to see arg options. 
+    - saves to .mat
 
 Tim Farrell, tmf@bu.edu
 20160219
@@ -28,22 +26,21 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpForm
                   "\n\t- saves to .mat") 
 parser.add_argument('sge_task_id', nargs=1, type=int, help="SGE_TASK_ID from qsub.") 
 parser.add_argument('--save-plots', dest='save_plots', action='store_const',\
-                    const=True, default=False, help="To save preprocessing plots. False by default.") 
+                    const=True, default=False,\
+                    help="To save  False by default.") 
 parser.add_argument('--allow-recomputing', dest='allow_recomputing', action='store_const',\
                     const=True, default=False,\
                     help="To compute all svds, even if subject-run svd already in $HCP/data/svds." +\
                          " False by default.") 
-parser.add_argument('--save-dtseries-presvd', dest='save_dtseries_presvd', action='store_const',\
-                    const=True, default=False, help="To save dense timeseries before computing svd." +\
-                    " False by default.")
 parser.add_argument('--save-noise-svd', dest='save_noise_svd', action='store_const', const=True,\
                     default=False, help="To save svd of noise dense timeseries. False by default.")
 parser.add_argument('--noise-size-limit', dest='noise_size_limit', nargs=1, type=int,\
-                    help="To size-limit noise mask. No limit by default.", default=[None])
+                    help="To limit the size of the noise mask. No limit by default.", default=[None])
 args = parser.parse_args() 
 
-# get subject-runs of this partition/ SGE_TASK_ID 
-f = open(project_datadir() + 'id_partitions.txt', 'r')
+# get subject-runs of this partition (i.e. sge_task_id) 
+project_datadir = '/projectnb/bohland/HCP/data/'
+f = open(project_datadir + 'id_partitions.txt', 'r')
 subjects = [l.strip().split('\t') for l in f.readlines()][args.sge_task_id[0] - 1]
 f.close()
 subject_runs = [(s, r) for s in subjects\
@@ -51,7 +48,7 @@ subject_runs = [(s, r) for s in subjects\
 
 # get those subject-runs for which svds were already computed
 subject_runs_w_svd = [(s0, s1) for (s0, s1, _) in \
-                      [svd.split('-') for svd in listdir(project_datadir() + 'svds/')]] 
+                      [svd.split('-') for svd in listdir(project_datadir + 'svds/')]] 
 
 # compute svd for subject-runs, if not done already  
 for subject_run in subject_runs: 
@@ -67,20 +64,16 @@ for subject_run in subject_runs:
             print("There was an error obtaining the timeseries for " + " ".join([subject, run])\
                   + ".\nError: " + str(e) + ".\n")
             continue
-        print("Doubly centering it...") 
-        ppts = doubly_center_c(ppts)
-        if args.save_dtseries_presvd:  
-            print("Saving it to .mat...") 
-            scio.savemat(project_datadir() + 'imgs/' + '-'.join([subject, run, 'presvd-dtseries.mat']),\
-                         {'dtseries': ppts})
+        print("Centering...") 
+        M = doubly_center_c(ppts)
         print("Computing SVD...") 
         # compute SVD
         [U, S, V] = [op.compute() for op in da.linalg.svd(\
-                     da.from_array(ppts, chunks=(4000, 1200)))]
-        print("Saving that to .mat...") 
+                     da.from_array(M, chunks=(4000, 1200)))]
+        print("Saving .mat...") 
         # save result to .mat 
-        scio.savemat(project_datadir() + 'svds/' + subject + '-' + run + '-svd.mat',\
-			 dict(zip(['U','S','V'], [U, S, V])))
+        scio.savemat(project_datadir + 'svds/' + subject + '-' + run + '-svd.mat',\
+			 dict(zip(['U', 'S', 'V'], [U, S, V])))
         print("Done " + subject + '-' + run + ".")
     else: 
         print("The svd for " + str(subject_run) + " is in $HCP/data/svds.\nPass --allow-recomputing " +\

@@ -2,7 +2,9 @@
 # 
 # (a) Splits first $1 HCP subjects (taken from /projectnb/connectomedb/Q6 on scc1) 
 #     into $2 partitions; and 
-# (b) Parallelizes `svd_dtseries.sh` over $2 partitions using qsub. 
+# (b) Parallelizes `svd_dtseries.sh` over those partitions using qsub. 
+# 
+# Run `svd_dtseries_parallel.sh -h` for usage instructions. 
 # 
 # Tim Farrell, tmf@bu.edu 
 # QNL, BU 
@@ -10,15 +12,13 @@
 
 # prelims
 set -e
-if [ $1 == '-h' ]; then 
-    echo -e "\nUsage:\n\t$ svd_dtseries_parallel.sh <#subjects> <#partitions> [--save-plots] [--allow-recomputing]"
+if [ "$1" == "-h" ]; then 
+    echo -e "\nUsage:\n\t$ svd_dtseries_parallel.sh <#subjects> <#partitions> [args]"
     echo -e "\nParams:" 
-    echo -e "#subjects\t\tNumber of subjects to run." 
-    echo -e "#partitions\t\tNumber of partitions to run them over." 
-    echo -e "--save-plots\t\tSaves all the preprocessing plots for all the runs. False by default." 
-    echo -e "--allow-recomputing\tComputes all svds, even if subject-run svds already in $HCP/data/svds. False by default." 
-    echo -e "\t\t\tNote: since by default svds already in $HCP/data/svds are not recomputed," 
-    echo -e "\t\t\tthis will influence which subjects are and aren't computed (if you're computing less than all)."
+    echo -e "#subjects\tNumber of subjects to run." 
+    echo -e "#partitions\tNumber of partitions to run them over." 
+    echo -e "args\t\tArgs for svd_dtseries.py" 
+    echo -e ""
     exit
 fi 
 
@@ -37,16 +37,6 @@ else
     echo "Need to pass #partitions (to run those subjects over) as 2nd arg." 
     exit 
 fi
-
-# get optional args
-args=""
-if [ ! -z $3 ]; then
-    args=$3
-fi 
-if [ ! -z $4 ]; then 
-    args="$args $4" 
-fi 
-
  
 # init new file to store partitions
 base_dir=/projectnb/bohland/HCP/data 
@@ -82,4 +72,5 @@ if [ "$(ls -A $base_dir/out/)" ]; then
 fi 
 
 # parallelize svd_dtseries.sh over #partitions 
-qsub -V -t 1-$n_partitions svd_dtseries.sh $args
+# passing optional args (${@:3}) 
+qsub -V -t 1-$n_partitions svd_dtseries.sh "${@:3}" 
