@@ -1,10 +1,10 @@
 ## HCP
 
-####Description
+#### Description
 
 A preprocessing pipeline for fMRI data from the Human Connectome Project (WU-Minn). 
 
-####Directory Structure  
+#### Directory Structure  
 
     /projectnb/bohland/HCP/
     
